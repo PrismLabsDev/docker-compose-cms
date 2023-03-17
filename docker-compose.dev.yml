@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+
+  strapi:
+    build:
+      context: ./docker
+      dockerfile: strapi.dockerfile
+    restart: "always"
+    ports:
+      - 1337:1337
+    environment:
+      DATABASE_CLIENT: mongo
+      DATABASE_HOST: mongo
+      DATABASE_PORT: 27017
+      DATABASE_NAME: strapi
+      DATABASE_USERNAME: strapi
+      DATABASE_PASSWORD: secret
+    volumes:
+      - ./docker/volumes/strapi/app:/srv/app
+    depends_on:
+      - mongo
+
+  mongo:
+    build:
+      context: ./docker
+      dockerfile: mongo.dockerfile
+    restart: "always"
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: 'strapi'
+      MONGO_INITDB_ROOT_PASSWORD: 'secret'
+    volumes:
+      - './docker/volumes/mongo/data:/data/db'
+
+  mailhog:
+    build:
+      context: ./docker
+      dockerfile: mailhog.dockerfile
+    restart: "always"
+    ports:
+      - "1025:1025"
+      - "8025:8025"

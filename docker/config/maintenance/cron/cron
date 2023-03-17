@@ -1,0 +1,2 @@
+0 23 * * * echo "Current date is `date`" > /var/log/cron
+0 23 * * * certbot renew

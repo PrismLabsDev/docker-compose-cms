@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+
+  maintenance:
+    build:
+      context: ./docker
+      dockerfile: maintenance.dockerfile
+    volumes:
+      - ./docker/volumes/certbot:/var/certbot/
+      - ./docker/volumes/letsencrypt/:/etc/letsencrypt/
+    depends_on:
+      - nginx
+
+  nginx:
+    build:
+      context: ./docker
+      dockerfile: nginx.dockerfile
+    restart: "always"
+    ports:
+      - 80:80
+    volumes:
+      - ./docker/config/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./docker/volumes/maintenance/certbot:/var/certbot/
+      - ./docker/volumes/maintenance/letsencrypt/:/etc/nginx/ssl/
+    depends_on:
+      - strapi
+      - mailserver
+
+  strapi:
+    build:
+      context: ./docker
+      dockerfile: strapi.dockerfile
+    restart: "always"
+    ports:
+      - 1337:1337
+    environment:
+      DATABASE_CLIENT: mongo
+      DATABASE_HOST: mongo
+      DATABASE_PORT: 27017
+      DATABASE_NAME: strapi
+      DATABASE_USERNAME: strapi
+      DATABASE_PASSWORD: secret
+    volumes:
+      - ./docker/volumes/strapi/app:/srv/app
+    depends_on:
+      - mongo
+
+  mongo:
+    build:
+      context: ./docker
+      dockerfile: mongo.dockerfile
+    restart: "always"
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: 'strapi'
+      MONGO_INITDB_ROOT_PASSWORD: 'secret'
+    volumes:
+      - './docker/volumes/mongo/data:/data/db'
+
+  mailserver:
+    build:
+      context: ./docker
+      dockerfile: mailserver.dockerfile
+    hostname: mail
+    domainname: example.com
+    env_file: ./docker/config/mailserver/mailserver.env
+    ports:
+      - "25:25"    # SMTP  (explicit TLS => STARTTLS)
+      - "143:143"  # IMAP4 (explicit TLS => STARTTLS)
+      - "465:465"  # ESMTP (implicit TLS)
+      - "587:587"  # ESMTP (explicit TLS => STARTTLS)
+      - "993:993"  # IMAP4 (implicit TLS)
+    volumes:
+      - ./docker/volumes/mailserver/mail-data/:/var/mail/
+      - ./docker/volumes/mailserver/mail-state/:/var/mail-state/
+      - ./docker/volumes/mailserver/mail-logs/:/var/log/mail/
+      - ./docker/volumes/mailserver/config/:/tmp/docker-mailserver/
+      - ./docker/volumes/maintenance/letsencrypt/:/etc/letsencrypt/
+      - /etc/localtime:/etc/localtime
+    restart: always
+    stop_grace_period: 1m
+    cap_add:
+      - NET_ADMIN
+    healthcheck:
+      test: "ss --listening --tcp | grep -P 'LISTEN.+:smtp' || exit 1"
+      timeout: 3s
+      retries: 0
+    depends_on:
+      - postgres
+
+  # postgres:
+  #   build:
+  #     context: ./docker
+  #     dockerfile: postgres.dockerfile
+  #   restart: "always"
+  #   ports:
+  #     - '5432:5432'
+  #   environment:
+  #     PGPASSWORD: 'secret'
+  #     POSTGRES_DB: 'base'
+  #     POSTGRES_USER: 'base'
+  #     POSTGRES_PASSWORD: 'secret'
+  #   volumes:
+  #     - './docker/volumes/postgres/data:/var/lib/postgresql/data'
