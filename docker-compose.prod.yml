@@ -8,8 +8,8 @@ services:
       dockerfile: maintenance.dockerfile
     restart: always
     volumes:
-      - ./docker/volumes/certbot:/var/certbot/
-      - ./docker/volumes/letsencrypt/:/etc/letsencrypt/
+      - ./docker/volumes/maintenance/certbot:/var/certbot/
+      - ./docker/volumes/maintenance/letsencrypt/:/etc/letsencrypt/
     depends_on:
       - nginx
 
