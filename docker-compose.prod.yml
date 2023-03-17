@@ -6,6 +6,7 @@ services:
     build:
       context: ./docker
       dockerfile: maintenance.dockerfile
+    restart: always
     volumes:
       - ./docker/volumes/certbot:/var/certbot/
       - ./docker/volumes/letsencrypt/:/etc/letsencrypt/
@@ -16,11 +17,12 @@ services:
     build:
       context: ./docker
       dockerfile: nginx.dockerfile
-    restart: "always"
+    restart: always
     ports:
       - 80:80
     volumes:
       - ./docker/config/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./docker/config/nginx/sites/default:/var/www/default
       - ./docker/volumes/maintenance/certbot:/var/certbot/
       - ./docker/volumes/maintenance/letsencrypt/:/etc/nginx/ssl/
     depends_on:
@@ -31,7 +33,7 @@ services:
     build:
       context: ./docker
       dockerfile: strapi.dockerfile
-    restart: "always"
+    restart: always
     ports:
       - 1337:1337
     environment:
@@ -50,19 +52,20 @@ services:
     build:
       context: ./docker
       dockerfile: mongo.dockerfile
-    restart: "always"
+    restart: always
     ports:
       - '27017:27017'
     environment:
-      MONGO_INITDB_ROOT_USERNAME: 'strapi'
-      MONGO_INITDB_ROOT_PASSWORD: 'secret'
+      MONGO_INITDB_ROOT_USERNAME: strapi
+      MONGO_INITDB_ROOT_PASSWORD: secret
     volumes:
-      - './docker/volumes/mongo/data:/data/db'
+      - ./docker/volumes/mongo/data:/data/db
 
   mailserver:
     build:
       context: ./docker
       dockerfile: mailserver.dockerfile
+    restart: always
     hostname: mail
     domainname: example.com
     env_file: ./docker/config/mailserver/mailserver.env
@@ -79,7 +82,6 @@ services:
       - ./docker/volumes/mailserver/config/:/tmp/docker-mailserver/
       - ./docker/volumes/maintenance/letsencrypt/:/etc/letsencrypt/
       - /etc/localtime:/etc/localtime
-    restart: always
     stop_grace_period: 1m
     cap_add:
       - NET_ADMIN
@@ -88,17 +90,33 @@ services:
       timeout: 3s
       retries: 0
 
-  # postgres:
+  # pgsql:
   #   build:
   #     context: ./docker
-  #     dockerfile: postgres.dockerfile
-  #   restart: "always"
+  #     dockerfile: pgsql.dockerfile
+  #   restart: always
   #   ports:
   #     - '5432:5432'
   #   environment:
-  #     PGPASSWORD: 'secret'
-  #     POSTGRES_DB: 'base'
-  #     POSTGRES_USER: 'base'
-  #     POSTGRES_PASSWORD: 'secret'
+  #     PGPASSWORD: secret
+  #     POSTGRES_DB: postfixadmin
+  #     POSTGRES_USER: postfixadmin
+  #     POSTGRES_PASSWORD: secret
   #   volumes:
-  #     - './docker/volumes/postgres/data:/var/lib/postgresql/data'
+  #     - './docker/volumes/pgsql/data:/var/lib/postgresql/data'
+
+  # postfixadmin:
+  #   build:
+  #     context: ./docker
+  #     dockerfile: postfixadmin.dockerfile
+  #   restart: always
+  #   ports:
+  #     - 8000:80
+  #   environment:
+  #     POSTFIXADMIN_DB_TYPE: pgsql
+  #     POSTFIXADMIN_DB_HOST: pgsql
+  #     POSTFIXADMIN_DB_USER: postfixadmin
+  #     POSTFIXADMIN_DB_NAME: postfixadmin
+  #     POSTFIXADMIN_DB_PASSWORD: secret
+  #   depends_on:
+  #     - pgsql
