@@ -24,6 +24,8 @@ services:
     volumes:
       - ./docker/config/nginx/conf.d/:/etc/nginx/conf.d/
       - ./docker/config/nginx/sites/default:/var/www/default
+      - ./docker/volumes/postfixadmin/html/:/var/www/postfixadmin
+      - ./docker/volumes/webmail/html/:/var/www/webmail
       - ./docker/volumes/maintenance/certbot:/var/certbot/
       - ./docker/volumes/maintenance/letsencrypt/:/etc/nginx/ssl/
     depends_on:
@@ -91,33 +93,45 @@ services:
       timeout: 3s
       retries: 0
 
-  # pgsql:
+  # webmail:
   #   build:
   #     context: ./docker
-  #     dockerfile: pgsql.dockerfile
+  #     dockerfile: webmail.dockerfile
   #   restart: always
   #   ports:
-  #     - '5432:5432'
-  #   environment:
-  #     PGPASSWORD: secret
-  #     POSTGRES_DB: postfixadmin
-  #     POSTGRES_USER: postfixadmin
-  #     POSTGRES_PASSWORD: secret
+  #     - 9000:9000
   #   volumes:
-  #     - './docker/volumes/pgsql/data:/var/lib/postgresql/data'
+  #     - ./docker/volumes/webmail/html/:/var/www/html
+  #   environment:
+  #     - ROUNDCUBEMAIL_DEFAULT_HOST=tls://mail.experimental.cyou
+  #     - ROUNDCUBEMAIL_DEFAULT_PORT=143
+  #     - ROUNDCUBEMAIL_SMTP_SERVER=tls://mail.experimental.cyou
+  #     - ROUNDCUBEMAIL_SMTP_PORT=587
+  #     - ROUNDCUBEMAIL_UPLOAD_MAX_FILESIZE=5M
 
   # postfixadmin:
   #   build:
   #     context: ./docker
   #     dockerfile: postfixadmin.dockerfile
-  #   restart: always
   #   ports:
-  #     - 8000:80
+  #     - 9000:9000
+  #   volumes:
+  #    - ./docker/volumes/postfixadmin/html/:/var/www/html
+  #   restart: always
   #   environment:
-  #     POSTFIXADMIN_DB_TYPE: pgsql
-  #     POSTFIXADMIN_DB_HOST: pgsql
+  #     POSTFIXADMIN_DB_TYPE: mysqli
+  #     POSTFIXADMIN_DB_HOST: db
   #     POSTFIXADMIN_DB_USER: postfixadmin
   #     POSTFIXADMIN_DB_NAME: postfixadmin
-  #     POSTFIXADMIN_DB_PASSWORD: secret
-  #   depends_on:
-  #     - pgsql
+  #     POSTFIXADMIN_DB_PASSWORD: example
+
+  # mysql:
+  #   build:
+  #     context: ./docker
+  #     dockerfile: mysql.dockerfile
+  #   restart: always
+  #   environment:
+  #     MYSQL_RANDOM_ROOT_PASSWORD: 1
+  #     MYSQL_DATABASE: postfixadmin
+  #     MYSQL_USER: postfixadmin
+  #     MYSQL_PASSWORD: example
