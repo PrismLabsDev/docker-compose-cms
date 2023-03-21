@@ -2,11 +2,59 @@ version: '3.8'
 
 services:
 
+  nginx:
+    build:
+      context: ./docker
+      dockerfile: nginx.dockerfile
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./docker/config/nginx/conf.d/:/etc/nginx/conf.d/
+      - ./docker/volumes/wordpress/data:/var/www/html
+    depends_on:
+      - strapi
+      - wordpress
+
+  wordpress:
+    build:
+      context: ./docker
+      dockerfile: wordpress.dockerfile
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_USER: general
+      WORDPRESS_DB_PASSWORD: Password#01
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - ./docker/volumes/wordpress/data:/var/www/html
+    depends_on:
+      - mysql
+
+  mysql:
+    build:
+      context: ./docker
+      dockerfile: mysql.dockerfile
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: Password#01
+      MYSQL_DATABASE: general
+      MYSQL_USER: general
+      MYSQL_PASSWORD: Password#01
+    volumes:
+      - ./docker/config/mysql/init:/docker-entrypoint-initdb.d
+      - ./docker/volumes/mysql/data:/var/lib/mysql
+
   strapi:
     build:
       context: ./docker
       dockerfile: strapi.dockerfile
-    restart: "always"
+    restart: always
     ports:
       - 1337:1337
     environment:
@@ -25,14 +73,14 @@ services:
     build:
       context: ./docker
       dockerfile: mongo.dockerfile
-    restart: "always"
+    restart: always
     ports:
       - '27017:27017'
     environment:
-      MONGO_INITDB_ROOT_USERNAME: 'strapi'
-      MONGO_INITDB_ROOT_PASSWORD: 'secret'
+      MONGO_INITDB_ROOT_USERNAME: strapi
+      MONGO_INITDB_ROOT_PASSWORD: secret
     volumes:
-      - './docker/volumes/mongo/data:/data/db'
+      - ./docker/volumes/mongo/data:/data/db
 
   mailhog:
     build:

@@ -24,7 +24,6 @@ services:
     volumes:
       - ./docker/config/nginx/conf.d/:/etc/nginx/conf.d/
       - ./docker/volumes/wordpress/data:/var/www/html
-      - ./docker/volumes/webmail/html/:/var/www/webmail
       - ./docker/volumes/maintenance/certbot:/var/certbot/
       - ./docker/volumes/maintenance/letsencrypt/:/etc/nginx/ssl/
     depends_on:
@@ -36,8 +35,6 @@ services:
       context: ./docker
       dockerfile: wordpress.dockerfile
     restart: always
-    ports:
-      - 8080:80
     environment:
       WORDPRESS_DB_HOST: mysql
       WORDPRESS_DB_USER: general
@@ -53,6 +50,8 @@ services:
       context: ./docker
       dockerfile: mysql.dockerfile
     restart: always
+    ports:
+      - 3306:3306
     environment:
       MYSQL_ROOT_PASSWORD: Password#01
       MYSQL_DATABASE: general
