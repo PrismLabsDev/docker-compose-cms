@@ -23,7 +23,7 @@ services:
       - 443:443
     volumes:
       - ./docker/config/nginx/conf.d/:/etc/nginx/conf.d/
-      - ./docker/volumes/wordpress/data:/var/www/html
+      - ./docker/volumes/wordpress/html:/var/www/html
       - ./docker/volumes/maintenance/certbot:/var/certbot/
       - ./docker/volumes/maintenance/letsencrypt/:/etc/nginx/ssl/
     depends_on:
@@ -41,7 +41,7 @@ services:
       WORDPRESS_DB_PASSWORD: Password#01
       WORDPRESS_DB_NAME: wordpress
     volumes:
-      - ./docker/volumes/wordpress/data:/var/www/html
+      - ./docker/volumes/wordpress/html:/var/www/html
     depends_on:
       - mysql
 
