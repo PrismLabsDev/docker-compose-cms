@@ -1,6 +1,8 @@
 # Docker Compose CMS
 
-This project is designed to replace shared hosting providers as well as the monolithic CMS architecture. In this project we utilize [Strapi](https://strapi.io/) CMS as a headless CMS, with the intension of creating a React application (Or other framework) and hosting on a platform like Vercel, Netlify or GithubPages.
+This project is designed to be deployed to a bare VPS and replace the need for a shared hosting provider. In this project we include a WordPress instance available at the root domain, [Strapi](https://strapi.io/) CMS for a headless architecture and alternative to WordPress, a mail server and finally tools to obtain and automatically renew SSL certificates. This project was created to give you similar functionality to a shared hosting provider with CPanle but with the ability to be easily self hosted, deployed and managed. Seeing as the project was created with docker-compose, the server or VPS you are deploying too only requires Docker to be installed for everything else to work. Minimal configuration after install is required, mainly for domain routing and SSL configuration, making this project able to be deployed in minutes. 
+
+We are continuing to add features and further automation and administration panels. All docker containers used are versioned and guaranteed to work with one another, however when using the project, you should make sure you are on a commit that is tagged with a version. The latest commit to the main branch should always be tagged with the latest version.
 
 ## Base Configuration
 
